@@ -24,8 +24,8 @@ class QAgent:
 
         return random.choice(best_actions)
 
-        print(f"🔍 Zustand: {state}")
-        print(f"📊 Q-Werte: {[round(q_values[a], 2) for a in range(9)]}")
+        print(f"Zustand: {state}")
+        print(f"Q-Werte: {[round(q_values[a], 2) for a in range(9)]}")
 
     def update(self, state, action, reward, next_state, done, next_actions):
         q_values = self.q_table[state]

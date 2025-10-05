@@ -38,9 +38,9 @@ def on_click(pos):
     raw_state = env.get_state()
     state = tuple([-x for x in raw_state])  # Perspektive spiegeln
 
-    print("📌 Zustand für Agent:", state)
-    print("📊 Q-Werte vorhanden?", state in agent.q_table)
-    print("📈 Q-Werte:", agent.q_table.get(state, 'Nicht gefunden'))
+    print("Zustand für Agent:", state)
+    print("Q-Werte vorhanden?", state in agent.q_table)
+    print("Q-Werte:", agent.q_table.get(state, 'Nicht gefunden'))
 
     action = agent.select_action(state, env.available_actions())
     env.board[action] = 1

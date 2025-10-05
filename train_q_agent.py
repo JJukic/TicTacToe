@@ -94,6 +94,6 @@ for episode in range(episodes):
 with open("q_table.pkl", "wb") as f:
     pickle.dump(agent.q_table, f)
 
-print("\n✅ Training abgeschlossen")
-print(f"🏆 Siege: {wins} | ❌ Niederlagen: {losses} | 🤝 Unentschieden: {draws}")
-print(f"📦 Q-Tabelle enthält {len(agent.q_table)} Zustände.")
+print("\nTraining abgeschlossen")
+print(f"Siege: {wins} | Niederlagen: {losses} | Unentschieden: {draws}")
+print(f"Q-Tabelle enthält {len(agent.q_table)} Zustände.")
