@@ -6,18 +6,6 @@ Das Spiel läuft in einer **Tkinter-GUI**, in der du gegen einen vortrainierten 
 
 ---
 
-## 📂 Projektstruktur
-TicTacToe/
-├── game.py               → GUI-Spiel (Tkinter)
-├── q_agent.py            → Q-Learning Agent
-├── tictactoe_env.py      → Spielumgebung
-├── train_q_agent.py      → Trainings-Skript für Agent
-├── q_table.pkl           → Vortrainierte Q-Tabelle
-├── test_env.py           → Umgebung testen (optional)
-└── README.md             → Projektdokumentation
-
----
-
 ## ▶️ Spiel starten
 
 ```bash
