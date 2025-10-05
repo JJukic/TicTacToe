@@ -4,6 +4,9 @@ import random
 from tictactoe_env import TicTacToeEnv
 from q_agent import QAgent
 
+agent_last_state = None
+agent_last_action = None
+
 # Agent laden
 agent = QAgent(epsilon=0)
 with open("q_table.pkl", "rb") as f:
@@ -32,32 +35,52 @@ def update_score_label():
     score_label.config(
         text=f"🏆 Agent: {score['agent']}   🧍 Du: {score['player']}   🤝 Unentschieden: {score['draw']}"
     )
-
 def on_click(pos):
-    if env.board[pos] != 0:
+    global agent_last_state, agent_last_action
+
+    if env.board[pos] != 0:  # Prüfe, ob das Feld bereits besetzt ist
         return
 
+    # Zustand vor dem Zug des Spielers speichern
+    player_state = tuple(env.get_state())
+
+    # Spieler (Mensch) macht seinen Zug
     env.board[pos] = -1
     buttons[pos]["text"] = "O"
     buttons[pos]["state"] = "disabled"
     buttons[pos]["bg"] = "#e6f7ff"
 
+    # Prüfe, ob der Mensch gewonnen hat
     winner = env.check_winner()
     if winner is not None:
+        reward = -10.0  # Bestrafung für den Agenten, da der Mensch gewonnen hat
+        if agent_last_state is not None and agent_last_action is not None:
+            agent.update(agent_last_state, agent_last_action, reward, None, True, [])
         show_winner(winner)
         return
 
-    # Agent spielt
-    state = tuple([-x for x in env.get_state()])
-    action = agent.select_action(state, env.available_actions())
-    env.board[action] = 1
+    # Agent trifft seine Entscheidung
+    agent_state = tuple([-x for x in env.get_state()])  # Zustand für den Agenten (invertiert)
+    action = agent.select_action(agent_state, env.available_actions())
+    env.board[action] = 1  # Agent macht seinen Zug
     buttons[action]["text"] = "X"
     buttons[action]["state"] = "disabled"
     buttons[action]["bg"] = "#ffe6e6"
 
+    # Speichere diesen Zustand und die Aktion für die nächste Runde
+    agent_last_state = agent_state
+    agent_last_action = action
+
+    # Prüfe, ob der Agent gewonnen hat
     winner = env.check_winner()
     if winner is not None:
+        reward = 10.0 if winner == 1 else 0.5  # Gewinn oder Unentschieden
+        if agent_last_state is not None and agent_last_action is not None:
+            agent.update(agent_last_state, agent_last_action, reward, None, True, [])
         show_winner(winner)
+    else:
+        # Aktualisiere Q-Werte des letzten Zuges
+        agent.update(agent_last_state, agent_last_action, 0, tuple([-x for x in env.get_state()]), False, env.available_actions())
 
 def show_winner(winner):
     if winner == 1:
@@ -72,16 +95,25 @@ def show_winner(winner):
     update_score_label()
     for btn in buttons:
         btn["state"] = "disabled"
-
 def reset_game():
-    global env
+    global env, agent_last_state, agent_last_action
+
+    # Speichere die aktualisierte Q-Tabelle
+    with open("q_table.pkl", "wb") as f:
+        pickle.dump(agent.q_table, f)
+
+    # Neustart der Umgebung
     env = TicTacToeEnv()
+    agent_last_state = None
+    agent_last_action = None
+
+    # Setze das Spielfeld zurück
     for i, btn in enumerate(buttons):
         btn["text"] = ""
         btn["state"] = "normal"
         btn["bg"] = "white"
 
-    # Zufällig starten lassen
+    # Zufällig bestimmen, wer anfängt
     if random.choice([True, False]):
         status.config(text="Agent beginnt (X)")
         state = tuple([-x for x in env.get_state()])
@@ -90,10 +122,15 @@ def reset_game():
         buttons[action]["text"] = "X"
         buttons[action]["state"] = "disabled"
         buttons[action]["bg"] = "#ffe6e6"
+        agent_last_state = state
+        agent_last_action = action
     else:
         status.config(text="Du beginnst (O)")
 
     update_score_label()
+
+    # Epsilon schrittweise reduzieren, um Exploration zu minimieren
+agent.epsilon = max(agent.epsilon * 0.995, 0.1)  # Mindestens epsilon = 0.1
 
 # Spielfeld erzeugen
 for i in range(9):

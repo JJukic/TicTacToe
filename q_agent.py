@@ -6,7 +6,7 @@ def default_q_values():
     return [0] * 9
 
 class QAgent:
-    def __init__(self, alpha=0.1, gamma=0.9, epsilon=0.1):
+    def __init__(self, alpha=0.5, gamma=0.95, epsilon=0.2):
         self.q_table = defaultdict(default_q_values)
         self.alpha = alpha
         self.gamma = gamma
