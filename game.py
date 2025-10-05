@@ -1,15 +1,29 @@
 import tkinter as tk
+import pickle
+
 from tictactoe_env import TicTacToeEnv
 from q_agent import QAgent
 
+# Spielfeld und Agent initialisieren
 env = TicTacToeEnv()
-agent = QAgent(epsilon=0)
+agent = QAgent(epsilon=0)  # Kein Zufall – nur das Beste
 
+# Q-Tabelle laden
+try:
+    with open("q_table.pkl", "rb") as f:
+        agent.q_table = pickle.load(f)
+    print("Q-Tabelle erfolgreich geladen.")
+except FileNotFoundError:
+    print("Fehler: q_table.pkl nicht gefunden. Bitte trainiere den Agenten zuerst.")
+    exit()
+
+# Fenster erstellen
 window = tk.Tk()
 window.title("Tic Tac Toe – Du vs RL-Agent")
 
 buttons = []
 
+# Spieler klickt auf ein Feld
 def on_click(pos):
     if env.board[pos] != 0:
         return
@@ -23,7 +37,7 @@ def on_click(pos):
         show_winner(winner)
         return
 
-    # Agent spielt
+    # Agent spielt (X)
     state = env.get_state()
     action = agent.select_action(state, env.available_actions())
     env.board[action] = 1
@@ -34,6 +48,7 @@ def on_click(pos):
     if winner is not None:
         show_winner(winner)
 
+# Gewinner anzeigen
 def show_winner(winner):
     if winner == 1:
         result = "Agent (X) gewinnt!"
@@ -45,6 +60,7 @@ def show_winner(winner):
     for btn in buttons:
         btn["state"] = "disabled"
 
+# Spiel Reset
 def reset_game():
     global env
     env = TicTacToeEnv()
@@ -53,12 +69,12 @@ def reset_game():
         btn["state"] = "normal"
     label.config(text="Du spielst O")
 
-# Spielfeld
+# GUI-Elemente aufbauen
 frame = tk.Frame(window)
 frame.pack()
 
 for i in range(9):
-    btn = tk.Button(frame, text="", width=6, height=3,
+    btn = tk.Button(frame, text="", width=6, height=4,
                     font=("Arial", 20),
                     command=lambda pos=i: on_click(pos))
     btn.grid(row=i//3, column=i%3)
@@ -70,4 +86,5 @@ label.pack(pady=10)
 reset_btn = tk.Button(window, text="Neu starten", command=reset_game)
 reset_btn.pack()
 
+# Spiel starten
 window.mainloop()
