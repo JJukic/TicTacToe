@@ -16,21 +16,16 @@ class QAgent:
         if random.random() < self.epsilon:
             return random.choice(available_actions)
 
-        # Beste Aktion aus Q-Werten wählen (max Q)
         q_values = self.q_table[state]
-        max_q = float('-inf')
-        best_action = None
+        action_qs = [(a, q_values[a]) for a in available_actions]
 
-        for action in available_actions:
-            if q_values[action] > max_q:
-                max_q = q_values[action]
-                best_action = action
+        max_q = max(q for _, q in action_qs)
+        best_actions = [a for a, q in action_qs if q == max_q]
 
-        # Falls alle gleich: wähle zufällig aus den besten
-        if best_action is None:
-            return random.choice(available_actions)
+        return random.choice(best_actions)
 
-        return best_action
+        print(f"🔍 Zustand: {state}")
+        print(f"📊 Q-Werte: {[round(q_values[a], 2) for a in range(9)]}")
 
     def update(self, state, action, reward, next_state, done, next_actions):
         q_values = self.q_table[state]

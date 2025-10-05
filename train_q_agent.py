@@ -3,58 +3,97 @@ import pickle
 from tictactoe_env import TicTacToeEnv
 from q_agent import QAgent
 
-env = TicTacToeEnv()
-agent = QAgent()
+# === Parameter ===
+episodes = 1000000
+epsilon = 1
+min_epsilon = 0.01
+decay_rate = 0.99995
 
-episodes = 10000
-wins = 0
-losses = 0
-draws = 0
+agent = QAgent(epsilon=epsilon)
+
+# === Statistik ===
+wins, losses, draws = 0, 0, 0
 
 for episode in range(episodes):
+    env = TicTacToeEnv()
     state = env.reset()
     done = False
 
-    while not done:
-        actions = env.available_actions()
-        action = agent.select_action(state, actions)
-        next_state, reward, done = env.step(action)
+    # abwechselnd spielt Agent als X oder O
+    agent_is_X = (episode % 2 == 0)
 
-        if done:
-            agent.update(state, action, reward, next_state, done, [])
-            if reward == 1:
-                wins += 1
-            elif reward == -1:
-                losses += 1
+    while not done:
+        # Zustand aus Sicht des Agenten
+        board_state = tuple(env.board)
+
+        if agent_is_X:
+            # Agent = X = 1
+            actions = env.available_actions()
+            action = agent.select_action(board_state, actions)
+            next_state, reward, done = env.step(action)
+        else:
+            # Agent = O = -1 (spiegeln)
+            state_flipped = tuple([-x for x in env.board])
+            actions = env.available_actions()
+            action = agent.select_action(state_flipped, actions)
+            env.board[action] = -1  # Agent macht O-Zug
+            next_state = tuple(env.board)
+            reward = env.check_winner()
+            if reward == -1:
+                reward = 1  # Agent hat als O gewonnen
+                done = True
+            elif reward == 1:
+                reward = -1  # Gegner hat als X gewonnen
+                done = True
+            elif 0 not in env.board:
+                reward = 0
+                done = True
             else:
+                done = False
+
+        # Belohnung anpassen
+        if done:
+            if reward == 1:
+                reward = 2.0
+                wins += 1
+            elif reward == 0:
+                reward = 0.5
                 draws += 1
+            elif reward == -1:
+                reward = -10.0
+                losses += 1
+            agent.update(board_state, action, reward, tuple(env.board), done, [])
             break
 
+        # Gegnerzug (zufällig, damit Agent robust lernt)
         opp_actions = env.available_actions()
         opp_action = random.choice(opp_actions)
         next_state, reward, done = env.step(opp_action)
 
         if done:
-            agent.update(state, action, reward, next_state, done, [])
             if reward == 1:
-                wins += 1
-            elif reward == -1:
+                reward = -10.0
                 losses += 1
-            else:
+            elif reward == 0:
+                reward = 0.5
                 draws += 1
+            agent.update(board_state, action, reward, tuple(env.board), done, [])
             break
 
-        next_actions = env.available_actions()
-        agent.update(state, action, reward, next_state, done, next_actions)
-        state = next_state
+        agent.update(board_state, action, reward, tuple(env.board), done, env.available_actions())
+        state = tuple(env.board)
 
-    if episode % 1000 == 0:
-        print(f"Episode {episode}")
+    # Epsilon reduzieren
+    epsilon = max(min_epsilon, epsilon * decay_rate)
+    agent.epsilon = epsilon
 
-# Speichern
+    if episode % 10000 == 0:
+        print(f"📘 Episode {episode} | ε = {epsilon:.4f} | Q-States: {len(agent.q_table)}")
+
+# === Q-Tabelle speichern ===
 with open("q_table.pkl", "wb") as f:
     pickle.dump(agent.q_table, f)
 
-print("Q-Tabelle wurde gespeichert.")
-print(f"Ergebnisse: Gewinne: {wins}, Verluste: {losses}, Unentschieden: {draws}")
-
+print("\n✅ Training abgeschlossen")
+print(f"🏆 Siege: {wins} | ❌ Niederlagen: {losses} | 🤝 Unentschieden: {draws}")
+print(f"📦 Q-Tabelle enthält {len(agent.q_table)} Zustände.")
