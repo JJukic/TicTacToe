@@ -2,7 +2,7 @@ import random
 from collections import defaultdict
 
 # Q-Werte Initialisierung (standardmäßig 0 für alle 9 Positionen)
-def default_q_values():
+def default_q_values() -> list:
     return [0] * 9
 
 class QAgent:

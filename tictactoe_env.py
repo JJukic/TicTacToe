@@ -7,10 +7,10 @@ class TicTacToeEnv:
         self.current_player = 1
         return self.get_state()
 
-    def get_state(self):
+    def get_state(self) -> tuple:
         return tuple(self.board)
 
-    def available_actions(self):
+    def available_actions(self) -> list:
         return [i for i in range(9) if self.board[i] == 0]
 
     def make_move(self, action):
@@ -41,8 +41,19 @@ class TicTacToeEnv:
         winner = self.check_winner()
         done = winner is not None
         reward = 0
+
         if done:
-            reward = winner
+            if winner == 1:
+                reward = 1.0
+            elif winner == -1:
+                reward = -1.0
+            else:
+                reward = 0.5  # Unentschieden = kleiner Reward
+        else:
+            reward = -0.01  # leichte Strafe für lange Spiele
+
         return self.get_state(), reward, done
 
-    
+    def get_legal_actions(self):
+        """Alias für available_actions() – kompatibel mit main.py"""
+        return self.available_actions()

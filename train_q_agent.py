@@ -1,13 +1,13 @@
 import random
 import pickle
 from tictactoe_env import TicTacToeEnv
-from q_agent import QAgent
+from Agents.q_agent import QAgent
 
-# === Parameter ===
-episodes = 1000000
-epsilon = 1
-min_epsilon = 0.01
-decay_rate = 0.99995
+# === Q-Learning Parameter ===
+episodes = 1000000              # Anzahl der Trainingsdurchläufe
+epsilon = 1                     # Exploration (100% Zufällige Züge des Agents)
+min_epsilon = 0.01              # kleine Wahrscheinlichkeit nach Training zu explorieren
+decay_rate = 0.99995            # die Rate mit der epsilon nach jeder Episode reduziert wird
 
 agent = QAgent(epsilon=epsilon)
 
